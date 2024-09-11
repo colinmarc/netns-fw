@@ -1,0 +1,30 @@
+[package]
+name = "netns-fw"
+version = "0.1.0"
+edition = "2021"
+
+
+[[bin]]
+name = "netns-fw"
+path = "src/bin.rs"
+
+[lib]
+name = "netns_fw"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+clone3 = "0.2"
+libc = "0.2"
+log = "0.4"
+env_logger = "0.11"
+seccompiler = { path = "../seccompiler", features = ["seccomp_unotify"] }
+thiserror = "1"
+uds = "0.4"
+
+[dependencies.rustix]
+version = "0.38"
+features = ["net", "fs", "thread", "process"]
+
+[build-dependencies]
+bindgen = "0.70"
