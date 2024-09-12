@@ -3,10 +3,8 @@
 
 use std::{
     io::ErrorKind,
-    os::fd::{AsFd as _, BorrowedFd, FromRawFd as _, OwnedFd},
+    os::fd::{AsFd as _, BorrowedFd, OwnedFd},
 };
-
-use libc::{sock_fprog, syscall, SYS_seccomp};
 
 mod sockaddr;
 mod sys;
@@ -14,7 +12,6 @@ mod syscall;
 use log::{info, trace, warn};
 use rustix::thread::Pid;
 use sockaddr::SockAddr;
-use sys::{SECCOMP_FILTER_FLAG_NEW_LISTENER, SECCOMP_SET_MODE_FILTER};
 use syscall::Syscall;
 
 /// Setup errors.
@@ -169,30 +166,11 @@ impl Filter {
     ///    prctl(PR_SET_NO_NEW_PRIVS, 1)
     ///
     /// Or the installation will fail.
-    pub fn install(mut self) -> std::io::Result<OwnedFd> {
-        let bpf_prog = sock_fprog {
-            len: self.0.len() as u16,
-            filter: self.0.as_mut_ptr() as *mut _,
-        };
-
-        // SAFETY: the arguments are correct and statically created. The kernel
-        // copies the args from us, so the pointers do not have to remain valid.
-        let rc = unsafe {
-            syscall(
-                SYS_seccomp,
-                SECCOMP_SET_MODE_FILTER,
-                SECCOMP_FILTER_FLAG_NEW_LISTENER,
-                &bpf_prog,
-            )
-        };
-
-        if rc <= 0 {
-            Err(std::io::Error::last_os_error())
-        } else {
-            // SAFETY: the documentation for seccomp(2) states that it returns a
-            // valid FD on success.
-            let fd = unsafe { OwnedFd::from_raw_fd(rc as _) };
-            Ok(fd)
+    pub fn install(self) -> std::io::Result<OwnedFd> {
+        match seccompiler::apply_filter_with_notify_fd(&self.0) {
+            Ok(fd) => Ok(fd),
+            Err(seccompiler::Error::Seccomp(e)) | Err(seccompiler::Error::Prctl(e)) => Err(e),
+            Err(e) => Err(std::io::Error::other(e)),
         }
     }
 }

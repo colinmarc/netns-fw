@@ -18,7 +18,7 @@ clone3 = "0.2"
 libc = "0.2"
 log = "0.4"
 env_logger = "0.11"
-seccompiler = { path = "../seccompiler", features = ["seccomp_unotify"] }
+seccompiler = { git = "https://github.com/colinmarc/seccompiler", rev = "2cac478d70445b318794741e4dffddcc6febd38d", features = ["seccomp_unotify"] }
 thiserror = "1"
 uds = "0.4"
 

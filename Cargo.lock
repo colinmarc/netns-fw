@@ -406,6 +406,7 @@ dependencies = [
 [[package]]
 name = "seccompiler"
 version = "0.4.0"
+source = "git+https://github.com/colinmarc/seccompiler?rev=2cac478d70445b318794741e4dffddcc6febd38d#2cac478d70445b318794741e4dffddcc6febd38d"
 dependencies = [
  "libc",
 ]
